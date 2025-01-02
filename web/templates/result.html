@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kết Quả Phân Tích Cảm Xúc</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* CSS cải tiến giao diện */
+        th {
+            background-color: #4CAF50;
+            color: white;
+            text-align: left;
+            padding: 10px;
+        }
+        td {
+            text-align: left;
+            padding: 8px;
+            color: white;
+        }
+        .filter-buttons button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .filter-buttons button:hover {
+            background-color: #45a049;
+        }
+        #comments-table {
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        .chart-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .empty-message {
+            margin: 20px 0;
+            text-align: center;
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Kết Quả Phân Tích Cảm Xúc</h1>
+    
+    <!-- Hiển thị biểu đồ -->
+    <div class="chart-container">
+        <h2>Biểu đồ cảm xúc</h2>
+        <canvas id="sentimentChart"></canvas>
+    </div>    
+
+    <!-- Nút lọc bình luận tích cực và tiêu cực -->
+    <div class="filter-buttons">
+        <button onclick="showComments('Positive')">Xem bình luận tích cực</button>
+        <button onclick="showComments('Negative')">Xem bình luận tiêu cực</button>
+    </div>
+
+    <!-- Bảng hiển thị bình luận -->
+    <div id="comments-table" style="display:none;">
+        <h2>Danh sách bình luận</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Bình luận</th>
+                    <th>Cảm xúc</th>
+                </tr>
+            </thead>
+            <tbody id="comments-body"></tbody>
+        </table>
+        <p id="empty-message" class="empty-message" style="display:none;">Không có bình luận nào được tìm thấy!</p>
+    </div>
+
+    <!-- Nút quay về trang chủ -->
+    <button class="submit-btn" onclick="window.location.href='/'">Quay về Trang Chủ</button>
+</div>
+
+<script>
+    // Lấy dữ liệu từ Flask
+    const comments = {{ result.comments|tojson|safe }};
+    const positiveCount = {{ result.positive_count }};
+    const negativeCount = {{ result.negative_count }};
+    const totalComments = positiveCount + negativeCount;
+    
+
+    // Tính phần trăm
+    const positivePercent = totalComments > 0 ? ((positiveCount / totalComments) * 100).toFixed(1) : 0;
+    const negativePercent = totalComments > 0 ? ((negativeCount / totalComments) * 100).toFixed(1) : 0;
+
+    // Hiển thị bình luận
+    function showComments(sentiment) {
+        const commentsBody = document.getElementById('comments-body');
+        const commentsTable = document.getElementById('comments-table');
+        const emptyMessage = document.getElementById('empty-message');
+        
+        // Kiểm tra xem bảng hiện có đang hiển thị hay không
+        if (commentsTable.style.display === 'block') {
+            // Nếu bảng đã hiển thị, ẩn bảng
+            commentsTable.style.display = 'none';
+            emptyMessage.style.display = 'none';
+            return;
+        }
+        
+        commentsBody.innerHTML = '';
+        
+        // Lọc bình luận theo cảm xúc
+        const filteredComments = comments.filter(comment => 
+            (sentiment === 'Positive' && comment.sentiment === 1) || 
+            (sentiment === 'Negative' && comment.sentiment === 0)
+        );
+        
+        // Kiểm tra nếu không có bình luận
+        if (filteredComments.length === 0) {
+            commentsTable.style.display = 'block';
+            emptyMessage.style.display = 'block';
+            return;
+        } else {
+            emptyMessage.style.display = 'none';
+        }
+        
+        // Thêm bình luận vào bảng
+        filteredComments.forEach(comment => {
+            const row = `<tr>
+                            <td>${comment.text}</td>
+                            <td>${sentiment === 'Positive' ? 'Tích cực' : 'Tiêu cực'}</td>
+                         </tr>`;
+            commentsBody.innerHTML += row;
+        });
+        
+        commentsTable.style.display = 'block';
+    }
+
+    // Hiển thị biểu đồ
+    const ctx = document.getElementById('sentimentChart').getContext('2d');
+    const sentimentChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: [
+                `Tích cực (${positivePercent}%)`,
+                `Tiêu cực (${negativePercent}%)`
+            ],
+            datasets: [{
+                data: [positiveCount, negativeCount],
+                backgroundColor: ['#4CAF50', '#F44336'],
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            label += context.raw + ' bình luận';
+                            return label;
+                        }
+                    }
+                },
+                legend: {
+                    labels: {
+                        font: {
+                            size: 14,
+                            weight: 'bold',
+                        },
+                        color: '#FFFFFF',
+                    }
+                }
+            }
+        }
+    });
+</script>
+</body>
+</html>

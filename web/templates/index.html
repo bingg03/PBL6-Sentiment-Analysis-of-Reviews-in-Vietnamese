@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analysis</title>
+    <!-- Liên kết file CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <h1>Phân Tích Cảm Xúc Bình Luận</h1>
+    
+    <!-- Hướng dẫn sử dụng -->
+    <div class="instructions">
+        <p><strong>Hướng dẫn:</strong></p>
+        <ul>
+            <li>Nhập hoặc kéo thả URL sản phẩm Lazada vào ô bên dưới để lấy bình luận.</li>
+            <li>Chọn mô hình phân tích cảm xúc mong muốn.</li>
+        </ul>
+    </div>
+    
+    <!-- Form nhập URL -->
+    <div class="input-group">
+        <label for="product-url"> </label>
+        <input type="text" id="product-url" placeholder="Nhập URL sản phẩm tại đây..." required>
+    </div>
+
+    <!-- Kéo và thả URL -->
+    <div class="drag-drop-area" id="drop-area">
+        <p>Kéo và thả URL vào đây</p>
+    </div>
+
+    <!-- Nút Submit -->
+    <button class="submit-btn" id="submit-btn">Bắt đầu Phân Tích</button>
+
+    <!-- Thanh tiến trình cho BERT -->
+    <div class="progress-container">
+        <h3>Tiến trình mô hình BERT:</h3>
+        <div class="progress-bar">
+            <div class="progress-bar-inner" id="bert-progress-bar"></div>
+        </div>
+        <p id="bert-progress-description" class="progress-description">Đang chờ...</p>
+        <button class="view-results-btn" id="view-bert-results">Xem Kết Quả BERT</button>
+    </div>
+    
+    <div class="progress-container">
+        <h3>Tiến trình mô hình LSTM:</h3>
+        <div class="progress-bar">
+            <div class="progress-bar-inner" id="lstm-progress-bar"></div>
+        </div>
+        <p id="lstm-progress-description" class="progress-description">Đang chờ...</p>
+        <button class="view-results-btn" id="view-lstm-results">Xem Kết Quả LSTM</button>
+    </div>
+</div>
+
+<!-- Liên kết file JavaScript -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+
+
+</body>
+</html>
+
+
